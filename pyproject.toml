@@ -41,6 +41,15 @@ select = [
     "D",   # pydocstyle
 ]
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.extend-select]
+# Explicitly choose D211 (no-blank-line-before-class) over D203
+"D211" = true
+# Explicitly choose D212 (multi-line-summary-first-line) over D213
+"D212" = true
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
