@@ -1,0 +1,22 @@
+{
+  "name": "Refsolver for AWS SAM CLI",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "DavidAnson.vscode-markdownlint",
+        "ms-python.python"
+      ],
+      "settings": {}
+    }
+  },
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind,consistency=cached"
+  ],
+  "initializeCommand": [
+    "./.devcontainer/initialize"
+  ]
+}
