@@ -26,7 +26,11 @@ def synth_app(example_dir: Path, cdk_out_dir: Path):
     os.chdir(example_dir)
     
     try:
+        # Import here to avoid circular imports
+        from example.example_stack import ExampleStack
+        
         app = App()
+        ExampleStack(app, "ExampleStack")
         app.synth()
     finally:
         os.chdir(old_cwd)
