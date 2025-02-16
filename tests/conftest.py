@@ -1,9 +1,9 @@
 """Test fixtures for AWS SAM CLI RefSolver."""
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
-from aws_cdk import App
 
 
 @pytest.fixture(scope="session")
@@ -21,16 +21,16 @@ def cdk_out_dir(example_dir: Path) -> Path:
 @pytest.fixture(scope="session", autouse=True)
 def synth_app(example_dir: Path, cdk_out_dir: Path):
     """Synthesize the CDK app before running tests."""
-    # Change to example directory since app.py expects to run there
+    # Change to example directory since cdk synth expects to run there
     old_cwd = os.getcwd()
     os.chdir(example_dir)
     
     try:
-        # Import here to avoid circular imports
-        from example.example_stack import ExampleStack
-        
-        app = App()
-        ExampleStack(app, "ExampleStack")
-        app.synth()
+        subprocess.run(
+            ["cdk", "synth"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
     finally:
         os.chdir(old_cwd)
