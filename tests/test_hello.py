@@ -10,7 +10,7 @@ def test_hello():
     assert hello() == "Hello from AWS SAM CLI RefSolver!"
 
 
-def test_cdk_synth(cdk_out_dir: Path):
+def test_cdk_synth(cdk_out: Path):
     """Test CDK synthesis produces output files."""
-    assert cdk_out_dir.exists()
-    assert any(cdk_out_dir.glob("*.template.json"))
+    assert cdk_out.exists()
+    assert any(cdk_out.glob("*.template.json"))
