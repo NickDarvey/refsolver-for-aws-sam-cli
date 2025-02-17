@@ -4,6 +4,9 @@ import subprocess
 from pathlib import Path
 
 import pytest
+from aws_cdk import cx_api
+
+from aws_sam_cli_refsolver import load_assembly
 
 
 @pytest.fixture(scope="session")
@@ -29,4 +32,11 @@ def cdk_out(request) -> Path:
     finally:
         os.chdir(old_cwd)
 
-    return example_dir / out_dir
+    out_path = example_dir / out_dir
+    return out_path
+
+
+@pytest.fixture(scope="session")
+def cdk_assembly(cdk_out: Path) -> cx_api.CloudAssembly:
+    """Load the CDK cloud assembly."""
+    return load_assembly(cdk_out)
