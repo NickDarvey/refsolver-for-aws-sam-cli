@@ -20,4 +20,4 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
     Returns:
         The loaded CloudAssembly object
     """
-    return cx_api.CloudAssembly(cdk_out_dir)
+    return cx_api.CloudAssembly(str(cdk_out_dir))
