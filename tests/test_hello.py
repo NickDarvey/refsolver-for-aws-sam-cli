@@ -22,4 +22,4 @@ def test_load_assembly(cdk_out: Path):
     assembly = load_assembly(cdk_out)
     assert assembly is not None
     assert len(assembly.stacks) > 0
-    assert "ExampleStack" in [stack.stack_name for stack in cdk_assembly.stacks]
+    assert "ExampleStack" in [stack.stack_name for stack in assembly.stacks]
