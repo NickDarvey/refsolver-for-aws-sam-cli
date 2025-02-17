@@ -17,20 +17,15 @@ def cdk_out(request) -> Path:
     os.chdir(example_dir)
 
     try:
-        request.node.add_report_section(
-            "call", "stdout", "Starting CDK synthesis..."
-        )
+        print("\nStarting CDK synthesis...")
         
         result = subprocess.run(
             ["cdk", "synth", "--output", out_dir],
             check=True,
-            capture_output=True,
             text=True,
         )
         
-        request.node.add_report_section(
-            "call", "stdout", f"CDK synthesis output:\n{result.stdout}"
-        )
+        print("CDK synthesis completed")
     finally:
         os.chdir(old_cwd)
 
