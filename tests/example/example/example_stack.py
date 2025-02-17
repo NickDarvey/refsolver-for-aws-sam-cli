@@ -45,6 +45,10 @@ class ExampleStack(Stack):
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
                 image=ecs.ContainerImage.from_registry("public.ecr.aws/docker/library/busybox:latest"),
                 command=["sh", "-c", "while true; do echo 'Example Container Service'; sleep 60; done"],
+                environment={
+                    "BUCKET_NAME": example_bucket.bucket_name,
+                    "TABLE_NAME": example_table.table_name
+                }
             )
         )
 
