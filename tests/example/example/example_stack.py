@@ -1,12 +1,12 @@
 from aws_cdk import (
     Stack,
+    RemovalPolicy,
     aws_dynamodb as dynamodb,
     aws_s3 as s3,
     aws_ec2 as ec2,
     aws_ecs as ecs,
     aws_ecs_patterns as ecs_patterns,
     aws_lambda as lambda_,
-    aws_iam as iam,
 )
 from constructs import Construct
 
@@ -43,11 +43,8 @@ class ExampleStack(Stack):
             cpu=256,
             memory_limit_mib=512,
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
-                image=ecs.ContainerImage.from_asset("example-container"),
-                environment={
-                    "BUCKET_NAME": example_bucket.bucket_name,
-                    "TABLE_NAME": example_table.table_name
-                }
+                image=ecs.ContainerImage.from_registry("public.ecr.aws/docker/library/busybox:latest"),
+                command=["sh", "-c", "while true; do echo 'Example Container Service'; sleep 60; done"],
             )
         )
 
@@ -55,11 +52,18 @@ class ExampleStack(Stack):
         example_bucket.grant_read_write(fargate_service.task_definition.task_role)
         example_table.grant_read_write_data(fargate_service.task_definition.task_role)
 
-        # Create Lambda function
-        example_function = lambda_.Function(self, "ExampleFunction",
+        # Create Lambda function with inline code
+        example_function = lambda_.Function(
+            self, "ExampleFunction",
             runtime=lambda_.Runtime.PYTHON_3_9,
             handler="index.handler",
-            code=lambda_.Code.from_asset("lambda"),
+            code=lambda_.Code.from_inline("""
+def handler(event, context):
+    return {
+        'statusCode': 200,
+        'body': 'Example Lambda Function'
+    }
+"""),
             environment={
                 "BUCKET_NAME": example_bucket.bucket_name,
                 "TABLE_NAME": example_table.table_name
