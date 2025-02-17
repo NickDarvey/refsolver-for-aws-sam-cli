@@ -5,8 +5,9 @@ from pathlib import Path
 
 import pytest
 
+
 @pytest.fixture(scope="session")
-def cdk_out() -> Path:
+def cdk_out(request) -> Path:
     """Synthesize the CDK app before running tests."""
     example_dir = Path(__file__).parent / "example"
     out_dir = "cdk.out"
@@ -16,11 +17,19 @@ def cdk_out() -> Path:
     os.chdir(example_dir)
 
     try:
-        subprocess.run(
+        request.node.add_report_section(
+            "call", "stdout", "Starting CDK synthesis..."
+        )
+        
+        result = subprocess.run(
             ["cdk", "synth", "--output", out_dir],
             check=True,
             capture_output=True,
             text=True,
+        )
+        
+        request.node.add_report_section(
+            "call", "stdout", f"CDK synthesis output:\n{result.stdout}"
         )
     finally:
         os.chdir(old_cwd)
