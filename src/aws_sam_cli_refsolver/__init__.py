@@ -1,5 +1,6 @@
 """AWS SAM CLI Reference Resolver package."""
 from pathlib import Path
+from typing import Optional, Dict, Any
 
 from aws_cdk import cx_api
 
@@ -21,3 +22,52 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
         The loaded CloudAssembly object
     """
     return cx_api.CloudAssembly(str(cdk_out_dir))
+
+
+def find_resource(assembly: cx_api.CloudAssembly, logical_id: str) -> Optional[Dict[str, Any]]:
+    """Find a CloudFormation resource by its CDK logical ID.
+    
+    Args:
+        assembly: The CDK cloud assembly to search
+        logical_id: The original CDK logical ID (e.g. 'ExampleFunction')
+        
+    Returns:
+        The CloudFormation resource definition if found, None otherwise
+        
+    Example:
+        >>> assembly = load_assembly(Path("cdk.out"))
+        >>> function = find_resource(assembly, "ExampleFunction")
+        >>> print(function["Type"])
+        'AWS::Lambda::Function'
+    """
+    def search_stack(template: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Search a stack template for the resource."""
+        # Look through all resources
+        for resource in template.get("Resources", {}).values():
+            # Check metadata for CDK path containing logical ID
+            metadata = resource.get("Metadata", {}).get("aws:cdk:path", "")
+            if f"/{logical_id}/" in metadata:
+                return resource
+            
+            # Check if this is a nested stack
+            if resource.get("Type") == "AWS::CloudFormation::Stack":
+                # Get the nested template
+                nested = resource.get("Properties", {}).get("TemplateURL", "")
+                if nested and isinstance(nested, str):
+                    # Load the nested template from the assembly
+                    nested_name = nested.split("/")[-1].replace(".json", "")
+                    for stack in assembly.stacks:
+                        if stack.stack_name == nested_name:
+                            result = search_stack(stack.template)
+                            if result:
+                                return result
+        
+        return None
+
+    # Search all stacks in the assembly
+    for stack in assembly.stacks:
+        result = search_stack(stack.template)
+        if result:
+            return result
+            
+    return None
