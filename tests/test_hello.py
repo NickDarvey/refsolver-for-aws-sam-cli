@@ -30,15 +30,15 @@ def test_find_resource(cdk_out: Path):
     assembly = load_assembly(cdk_out)
     
     # Find the Lambda function
-    function = find_resource(assembly, "ExampleFunction")
+    function = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
     assert function is not None
     assert function["Type"] == "AWS::Lambda::Function"
     
     # Find the DynamoDB table
-    table = find_resource(assembly, "ExampleTable")
+    table = find_resource(assembly, "ExampleTable", "AWS::DynamoDB::Table")
     assert table is not None
     assert table["Type"] == "AWS::DynamoDB::Table"
     
     # Test non-existent resource
-    missing = find_resource(assembly, "NonExistentResource")
+    missing = find_resource(assembly, "NonExistentResource", "AWS::Lambda::Function")
     assert missing is None

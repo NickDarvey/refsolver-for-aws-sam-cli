@@ -24,19 +24,24 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
     return cx_api.CloudAssembly(str(cdk_out_dir))
 
 
-def find_resource(assembly: cx_api.CloudAssembly, logical_id: str) -> Optional[Dict[str, Any]]:
-    """Find a CloudFormation resource by its CDK logical ID.
+def find_resource(
+    assembly: cx_api.CloudAssembly, 
+    logical_id: str,
+    resource_type: str
+) -> Optional[Dict[str, Any]]:
+    """Find a CloudFormation resource by its CDK logical ID and type.
     
     Args:
         assembly: The CDK cloud assembly to search
         logical_id: The original CDK logical ID (e.g. 'ExampleFunction')
+        resource_type: The CloudFormation resource type (e.g. 'AWS::Lambda::Function')
         
     Returns:
         The CloudFormation resource definition if found, None otherwise
         
     Example:
         >>> assembly = load_assembly(Path("cdk.out"))
-        >>> function = find_resource(assembly, "ExampleFunction")
+        >>> function = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
         >>> print(function["Type"])
         'AWS::Lambda::Function'
     """
@@ -44,6 +49,10 @@ def find_resource(assembly: cx_api.CloudAssembly, logical_id: str) -> Optional[D
         """Search a stack template for the resource."""
         # Look through all resources
         for resource in template.get("Resources", {}).values():
+            # Check resource type matches
+            if resource.get("Type") != resource_type:
+                continue
+                
             # Check metadata for CDK path containing logical ID
             metadata = resource.get("Metadata", {}).get("aws:cdk:path", "")
             if f"/{logical_id}/" in metadata:
