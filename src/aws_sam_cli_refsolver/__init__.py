@@ -1,7 +1,8 @@
 """AWS SAM CLI Reference Resolver package."""
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 
+import boto3
 from aws_cdk import cx_api
 
 __version__ = "0.1.0"
@@ -135,3 +136,57 @@ def find_resource(
             return result
             
     return None
+
+
+def test_resolve_ref(mocker):
+    """Test resolving CloudFormation refs to physical IDs."""
+    # Mock the CloudFormation client
+    mock_cfn = mocker.patch('boto3.client')
+    mock_cfn.return_value.describe_stack_resource.return_value = {
+        'StackResourceDetail': {
+            'PhysicalResourceId': 'my-stack-bucket-u4d24n1mpl0y'
+        }
+    }
+    
+    # Test with dict ref
+    ref = {'Ref': 'MyBucket'}
+    assert resolve_ref('my-stack', ref) == 'my-stack-bucket-u4d24n1mpl0y'
+    
+    # Test with string ref
+    assert resolve_ref('my-stack', 'MyBucket') == 'my-stack-bucket-u4d24n1mpl0y'
+    
+    # Verify correct API call
+    mock_cfn.return_value.describe_stack_resource.assert_called_with(
+        StackName='my-stack',
+        LogicalResourceId='MyBucket'
+    )
+
+
+def resolve_ref(stack_name: str, ref: Union[Dict[str, str], str], region: Optional[str] = None) -> str:
+    """Resolve a CloudFormation Ref to its physical resource ID.
+    
+    Args:
+        stack_name: Name of the CloudFormation stack
+        ref: Either a dict like {'Ref': 'LogicalId'} or a logical ID string
+        region: Optional AWS region, defaults to current session region
+        
+    Returns:
+        The physical resource ID (e.g. actual bucket name)
+        
+    Example:
+        >>> resolve_ref("MyStack", {'Ref': 'MyBucket'})
+        'my-stack-mybucket-u4d24n1mpl0y'
+    """
+    # Get logical ID from ref
+    logical_id = ref['Ref'] if isinstance(ref, dict) else ref
+    
+    # Create CloudFormation client
+    cfn = boto3.client('cloudformation', region_name=region)
+    
+    # Get physical resource ID
+    response = cfn.describe_stack_resource(
+        StackName=stack_name,
+        LogicalResourceId=logical_id
+    )
+    
+    return response['StackResourceDetail']['PhysicalResourceId']

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from aws_cdk import cx_api
-from aws_sam_cli_refsolver import hello, load_assembly, find_resource
+from aws_sam_cli_refsolver import hello, load_assembly, find_resource, resolve_ref
 
 
 def test_hello():
