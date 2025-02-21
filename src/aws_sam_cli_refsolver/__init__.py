@@ -101,7 +101,7 @@ def find_resource(
         >>> print(function["Type"])
         'AWS::Lambda::Function'
     """
-    def search_stack(template: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def search_stack(template: Dict[str, Any], current_stack: cx_api.CloudFormationStackArtifact) -> Optional[tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]]:
         """Search a stack template for the resource."""
         # Look through all resources
         for resource in template.get("Resources", {}).values():
@@ -112,7 +112,7 @@ def find_resource(
             # Check metadata for CDK path containing logical ID
             metadata = resource.get("Metadata", {}).get("aws:cdk:path", "")
             if f"/{logical_id}/" in metadata:
-                return resource, stack
+                return resource, current_stack
             
             # Check if this is a nested stack
             if resource.get("Type") == "AWS::CloudFormation::Stack":
@@ -123,7 +123,7 @@ def find_resource(
                     nested_name = nested.split("/")[-1].replace(".json", "")
                     for stack in assembly.stacks:
                         if stack.stack_name == nested_name:
-                            result = search_stack(stack.template)
+                            result = search_stack(stack.template, stack)
                             if result:
                                 return result
         
@@ -131,7 +131,7 @@ def find_resource(
 
     # Search all stacks in the assembly
     for stack in assembly.stacks:
-        result = search_stack(stack.template)
+        result = search_stack(stack.template, stack)
         if result:
             return result
             
