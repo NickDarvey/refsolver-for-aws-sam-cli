@@ -80,8 +80,14 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
 
 
-def test_resolve_ref(mocker):
+def test_resolve_ref(mocker, cdk_out: Path):
     """Test resolving CloudFormation refs to physical IDs."""
+    # Load assembly and find a resource
+    assembly = load_assembly(cdk_out)
+    result = find_resource(assembly, "ExampleBucket", "AWS::S3::Bucket")
+    assert result is not None
+    bucket, stack = result
+    
     # Mock the CloudFormation client
     mock_cfn = mocker.patch('boto3.client')
     mock_cfn.return_value.describe_stack_resource.return_value = {
@@ -91,26 +97,23 @@ def test_resolve_ref(mocker):
     }
     
     # Test with valid dict ref
-    ref = {'Ref': 'MyBucket'}
-    assert resolve_ref('my-stack', ref) == 'my-stack-bucket-u4d24n1mpl0y'
+    ref = {'Ref': 'ExampleBucket'}
+    assert resolve_ref(stack, ref) == 'my-stack-bucket-u4d24n1mpl0y'
     
     # Test invalid inputs
-    with pytest.raises(ValueError, match="stack_name must be a non-empty string"):
-        resolve_ref('', ref)
-    
     with pytest.raises(TypeError, match="ref must be a dict"):
-        resolve_ref('my-stack', 'MyBucket')
+        resolve_ref(stack, 'ExampleBucket')
     
     with pytest.raises(ValueError, match="ref dict must contain 'Ref' key"):
-        resolve_ref('my-stack', {})
+        resolve_ref(stack, {})
     
     with pytest.raises(ValueError, match="ref\\['Ref'\\] must be a non-empty string"):
-        resolve_ref('my-stack', {'Ref': ''})
+        resolve_ref(stack, {'Ref': ''})
     
     # Verify correct API call
     mock_cfn.return_value.describe_stack_resource.assert_called_with(
-        StackName='my-stack',
-        LogicalResourceId='MyBucket'
+        StackName='ExampleStack',
+        LogicalResourceId='ExampleBucket'
     )
 
 
@@ -119,14 +122,18 @@ def test_find_resource(cdk_out: Path):
     assembly = load_assembly(cdk_out)
     
     # Find the Lambda function
-    function = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
-    assert function is not None
+    result = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
+    assert result is not None
+    function, stack = result
     assert function["Type"] == "AWS::Lambda::Function"
+    assert stack.stack_name == "ExampleStack"
     
     # Find the DynamoDB table
-    table = find_resource(assembly, "ExampleTable", "AWS::DynamoDB::Table")
-    assert table is not None
+    result = find_resource(assembly, "ExampleTable", "AWS::DynamoDB::Table")
+    assert result is not None
+    table, stack = result
     assert table["Type"] == "AWS::DynamoDB::Table"
+    assert stack.stack_name == "ExampleStack"
     
     # Test non-existent resource
     missing = find_resource(assembly, "NonExistentResource", "AWS::Lambda::Function")

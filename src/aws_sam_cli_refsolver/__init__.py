@@ -84,7 +84,7 @@ def find_resource(
     assembly: cx_api.CloudAssembly, 
     logical_id: str,
     resource_type: str
-) -> Optional[Dict[str, Any]]:
+) -> Optional[tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]]:
     """Find a CloudFormation resource by its CDK logical ID and type.
     
     Args:
@@ -112,7 +112,7 @@ def find_resource(
             # Check metadata for CDK path containing logical ID
             metadata = resource.get("Metadata", {}).get("aws:cdk:path", "")
             if f"/{logical_id}/" in metadata:
-                return resource
+                return resource, stack
             
             # Check if this is a nested stack
             if resource.get("Type") == "AWS::CloudFormation::Stack":
@@ -140,11 +140,11 @@ def find_resource(
 
 
 
-def resolve_ref(stack_name: str, ref: Dict[str, str], region: Optional[str] = None) -> str:
+def resolve_ref(stack: cx_api.CloudFormationStackArtifact, ref: Dict[str, str], region: Optional[str] = None) -> str:
     """Resolve a CloudFormation Ref to its physical resource ID.
     
     Args:
-        stack_name: Name of the CloudFormation stack
+        stack: The CloudFormation stack artifact from CDK
         ref: A dict like {'Ref': 'LogicalId'}
         region: Optional AWS region, defaults to current session region
         
@@ -152,17 +152,14 @@ def resolve_ref(stack_name: str, ref: Dict[str, str], region: Optional[str] = No
         The physical resource ID (e.g. actual bucket name)
         
     Raises:
-        ValueError: If stack_name is empty or ref is invalid
+        ValueError: If ref is invalid
         TypeError: If ref is not a dict
         
     Example:
-        >>> resolve_ref("MyStack", {'Ref': 'MyBucket'})
+        >>> resource, stack = find_resource(assembly, "MyBucket", "AWS::S3::Bucket")
+        >>> resolve_ref(stack, {'Ref': 'MyBucket'})
         'my-stack-mybucket-u4d24n1mpl0y'
     """
-    # Validate stack name
-    if not stack_name or not isinstance(stack_name, str):
-        raise ValueError("stack_name must be a non-empty string")
-
     # Validate ref is a dict
     if not isinstance(ref, dict):
         raise TypeError("ref must be a dict")
@@ -180,7 +177,7 @@ def resolve_ref(stack_name: str, ref: Dict[str, str], region: Optional[str] = No
     
     # Get physical resource ID
     response = cfn.describe_stack_resource(
-        StackName=stack_name,
+        StackName=stack.stack_name,
         LogicalResourceId=logical_id
     )
     
