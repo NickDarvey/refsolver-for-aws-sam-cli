@@ -24,6 +24,37 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
     return cx_api.CloudAssembly(str(cdk_out_dir))
 
 
+def extract_environment_vars(task_definition: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract environment variables from an ECS task definition.
+    
+    Args:
+        task_definition: The CloudFormation resource definition for an ECS task
+        
+    Returns:
+        Dictionary mapping environment variable names to their values
+        
+    Example:
+        >>> task_def = find_resource(assembly, "ExampleTaskDef", "AWS::ECS::TaskDefinition")
+        >>> env_vars = extract_environment_vars(task_def)
+        >>> print(env_vars["BUCKET_NAME"])
+        {'Ref': 'ExampleBucketDC717CF4'}
+    """
+    env_vars = {}
+    
+    # Get container definitions
+    containers = task_definition.get("Properties", {}).get("ContainerDefinitions", [])
+    
+    # Extract environment variables from each container
+    for container in containers:
+        for env in container.get("Environment", []):
+            name = env.get("Name")
+            value = env.get("Value")
+            if name and value:
+                env_vars[name] = value
+                
+    return env_vars
+
+
 def find_resource(
     assembly: cx_api.CloudAssembly, 
     logical_id: str,

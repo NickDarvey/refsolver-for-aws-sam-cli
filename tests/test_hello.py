@@ -25,6 +25,23 @@ def test_load_assembly(cdk_out: Path):
     assert "ExampleStack" in [stack.stack_name for stack in assembly.stacks]
 
 
+def test_extract_environment_vars(cdk_out: Path):
+    """Test extracting environment variables from task definition."""
+    assembly = load_assembly(cdk_out)
+    
+    # Find the task definition
+    task_def = find_resource(assembly, "ExampleFargateServiceTaskDef", "AWS::ECS::TaskDefinition")
+    assert task_def is not None
+    
+    # Extract environment variables
+    env_vars = extract_environment_vars(task_def)
+    assert env_vars is not None
+    assert "BUCKET_NAME" in env_vars
+    assert "TABLE_NAME" in env_vars
+    assert env_vars["BUCKET_NAME"] == {"Ref": "ExampleBucketDC717CF4"}
+    assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
+
+
 def test_find_resource(cdk_out: Path):
     """Test finding resources by CDK logical ID."""
     assembly = load_assembly(cdk_out)
