@@ -24,7 +24,7 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
     return cx_api.CloudAssembly(str(cdk_out_dir))
 
 
-def extract_lambda_environment_vars(function: Dict[str, Any]) -> Dict[str, Any]:
+def extract_lambda_function_environment_vars(function: Dict[str, Any]) -> Dict[str, Any]:
     # Verify resource type
     if function.get("Type") != "AWS::Lambda::Function":
         raise ValueError("Resource must be of type AWS::Lambda::Function")
@@ -45,7 +45,7 @@ def extract_lambda_environment_vars(function: Dict[str, Any]) -> Dict[str, Any]:
     return function.get("Properties", {}).get("Environment", {}).get("Variables", {})
 
 
-def extract_environment_vars(task_definition: Dict[str, Any]) -> Dict[str, Any]:
+def extract_ecs_task_definition_environment_vars(task_definition: Dict[str, Any]) -> Dict[str, Any]:
     # Verify resource type
     if task_definition.get("Type") != "AWS::ECS::TaskDefinition":
         raise ValueError("Resource must be of type AWS::ECS::TaskDefinition")
