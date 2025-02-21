@@ -68,7 +68,7 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assembly = load_assembly(cdk_out)
     
     # Find the task definition
-    task_def = find_resource(assembly, "ExampleFargateServiceTaskDef", "AWS::ECS::TaskDefinition")
+    task_def = find_resource(assembly, "ExampleFargateService", "AWS::ECS::TaskDefinition")
     assert task_def is not None
     
     # Extract environment variables
