@@ -148,12 +148,28 @@ def test_resolve_ref(mocker):
         }
     }
     
-    # Test with dict ref
+    # Test with valid dict ref
     ref = {'Ref': 'MyBucket'}
     assert resolve_ref('my-stack', ref) == 'my-stack-bucket-u4d24n1mpl0y'
     
-    # Test with string ref
+    # Test with valid string ref
     assert resolve_ref('my-stack', 'MyBucket') == 'my-stack-bucket-u4d24n1mpl0y'
+    
+    # Test invalid inputs
+    with pytest.raises(ValueError, match="stack_name must be a non-empty string"):
+        resolve_ref('', ref)
+    
+    with pytest.raises(ValueError, match="ref dict must contain 'Ref' key"):
+        resolve_ref('my-stack', {})
+    
+    with pytest.raises(ValueError, match="ref\\['Ref'\\] must be a non-empty string"):
+        resolve_ref('my-stack', {'Ref': ''})
+    
+    with pytest.raises(ValueError, match="ref string must be non-empty"):
+        resolve_ref('my-stack', '')
+    
+    with pytest.raises(TypeError, match="ref must be either a dict with 'Ref' key or a string"):
+        resolve_ref('my-stack', 123)
     
     # Verify correct API call
     mock_cfn.return_value.describe_stack_resource.assert_called_with(
@@ -173,12 +189,31 @@ def resolve_ref(stack_name: str, ref: Union[Dict[str, str], str], region: Option
     Returns:
         The physical resource ID (e.g. actual bucket name)
         
+    Raises:
+        ValueError: If stack_name is empty or ref is invalid
+        TypeError: If ref is neither a dict with 'Ref' key nor a string
+        
     Example:
         >>> resolve_ref("MyStack", {'Ref': 'MyBucket'})
         'my-stack-mybucket-u4d24n1mpl0y'
     """
-    # Get logical ID from ref
-    logical_id = ref['Ref'] if isinstance(ref, dict) else ref
+    # Validate stack name
+    if not stack_name or not isinstance(stack_name, str):
+        raise ValueError("stack_name must be a non-empty string")
+
+    # Validate and extract logical ID from ref
+    if isinstance(ref, dict):
+        if 'Ref' not in ref:
+            raise ValueError("ref dict must contain 'Ref' key")
+        if not isinstance(ref['Ref'], str) or not ref['Ref']:
+            raise ValueError("ref['Ref'] must be a non-empty string")
+        logical_id = ref['Ref']
+    elif isinstance(ref, str):
+        if not ref:
+            raise ValueError("ref string must be non-empty")
+        logical_id = ref
+    else:
+        raise TypeError("ref must be either a dict with 'Ref' key or a string")
     
     # Create CloudFormation client
     cfn = boto3.client('cloudformation', region_name=region)
