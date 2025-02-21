@@ -24,6 +24,24 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
     return cx_api.CloudAssembly(str(cdk_out_dir))
 
 
+def extract_lambda_environment_vars(function: Dict[str, Any]) -> Dict[str, Any]:
+    """Extract environment variables from a Lambda function definition.
+    
+    Args:
+        function: The CloudFormation resource definition for a Lambda function
+        
+    Returns:
+        Dictionary mapping environment variable names to their values
+        
+    Example:
+        >>> func = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
+        >>> env_vars = extract_lambda_environment_vars(func)
+        >>> print(env_vars["BUCKET_NAME"])
+        {'Ref': 'ExampleBucketDC717CF4'}
+    """
+    return function.get("Properties", {}).get("Environment", {}).get("Variables", {})
+
+
 def extract_environment_vars(task_definition: Dict[str, Any]) -> Dict[str, Any]:
     """Extract environment variables from an ECS task definition.
     
