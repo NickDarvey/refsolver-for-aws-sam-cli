@@ -27,6 +27,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v"
+required_plugins = ["pytest-mock"]
 
 [tool.ruff]
 target-version = "py312"

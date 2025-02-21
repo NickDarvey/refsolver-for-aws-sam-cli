@@ -25,7 +25,7 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
     return cx_api.CloudAssembly(str(cdk_out_dir))
 
 
-def extract_lambda_function_environment_vars(function: Dict[str, Any]) -> Dict[str, Any]:
+def extract_lambda_function_environment_vars(function_tuple: tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]) -> Dict[str, Any]:
     """Extract environment variables from a Lambda function definition.
     
     Args:
@@ -40,13 +40,16 @@ def extract_lambda_function_environment_vars(function: Dict[str, Any]) -> Dict[s
         >>> print(env_vars["BUCKET_NAME"])
         {'Ref': 'ExampleBucketDC717CF4'}
     """
+    # Unpack the tuple
+    function, _ = function_tuple
+    
     # Verify resource type
     if function.get("Type") != "AWS::Lambda::Function":
         raise ValueError("Resource must be of type AWS::Lambda::Function")
     return function.get("Properties", {}).get("Environment", {}).get("Variables", {})
 
 
-def extract_ecs_task_definition_environment_vars(task_definition: Dict[str, Any]) -> Dict[str, Any]:
+def extract_ecs_task_definition_environment_vars(task_definition_tuple: tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]) -> Dict[str, Any]:
     """Extract environment variables from an ECS task definition.
     
     Args:
@@ -61,6 +64,9 @@ def extract_ecs_task_definition_environment_vars(task_definition: Dict[str, Any]
         >>> print(env_vars["BUCKET_NAME"])
         {'Ref': 'ExampleBucketDC717CF4'}
     """
+    # Unpack the tuple
+    task_definition, _ = task_definition_tuple
+    
     # Verify resource type
     if task_definition.get("Type") != "AWS::ECS::TaskDefinition":
         raise ValueError("Resource must be of type AWS::ECS::TaskDefinition")
