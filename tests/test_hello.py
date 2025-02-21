@@ -3,7 +3,14 @@ from pathlib import Path
 
 import pytest
 from aws_cdk import cx_api
-from aws_sam_cli_refsolver import hello, load_assembly, find_resource, resolve_ref
+from aws_sam_cli_refsolver import (
+    hello,
+    load_assembly,
+    find_resource,
+    resolve_ref,
+    extract_lambda_function_environment_vars,
+    extract_ecs_task_definition_environment_vars,
+)
 
 
 def test_hello():
