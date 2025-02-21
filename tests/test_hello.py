@@ -29,6 +29,13 @@ def test_extract_lambda_environment_vars(cdk_out: Path):
     """Test extracting environment variables from Lambda function."""
     assembly = load_assembly(cdk_out)
     
+    # Test with wrong resource type
+    table = find_resource(assembly, "ExampleTable", "AWS::DynamoDB::Table")
+    with pytest.raises(ValueError, match="must be of type AWS::Lambda::Function"):
+        extract_lambda_environment_vars(table)
+    """Test extracting environment variables from Lambda function."""
+    assembly = load_assembly(cdk_out)
+    
     # Find the Lambda function
     function = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
     assert function is not None
@@ -43,6 +50,13 @@ def test_extract_lambda_environment_vars(cdk_out: Path):
 
 
 def test_extract_environment_vars(cdk_out: Path):
+    """Test extracting environment variables from task definition."""
+    assembly = load_assembly(cdk_out)
+    
+    # Test with wrong resource type
+    table = find_resource(assembly, "ExampleTable", "AWS::DynamoDB::Table")
+    with pytest.raises(ValueError, match="must be of type AWS::ECS::TaskDefinition"):
+        extract_environment_vars(table)
     """Test extracting environment variables from task definition."""
     assembly = load_assembly(cdk_out)
     
