@@ -40,6 +40,9 @@ def extract_lambda_function_environment_vars(function: Dict[str, Any]) -> Dict[s
         >>> print(env_vars["BUCKET_NAME"])
         {'Ref': 'ExampleBucketDC717CF4'}
     """
+    # Verify resource type
+    if function.get("Type") != "AWS::Lambda::Function":
+        raise ValueError("Resource must be of type AWS::Lambda::Function")
     return function.get("Properties", {}).get("Environment", {}).get("Variables", {})
 
 
@@ -58,6 +61,9 @@ def extract_ecs_task_definition_environment_vars(task_definition: Dict[str, Any]
         >>> print(env_vars["BUCKET_NAME"])
         {'Ref': 'ExampleBucketDC717CF4'}
     """
+    # Verify resource type
+    if task_definition.get("Type") != "AWS::ECS::TaskDefinition":
+        raise ValueError("Resource must be of type AWS::ECS::TaskDefinition")
     env_vars = {}
     
     # Get container definitions
