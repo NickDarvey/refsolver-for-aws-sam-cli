@@ -138,38 +138,6 @@ def find_resource(
     return None
 
 
-def test_resolve_ref(mocker):
-    """Test resolving CloudFormation refs to physical IDs."""
-    # Mock the CloudFormation client
-    mock_cfn = mocker.patch('boto3.client')
-    mock_cfn.return_value.describe_stack_resource.return_value = {
-        'StackResourceDetail': {
-            'PhysicalResourceId': 'my-stack-bucket-u4d24n1mpl0y'
-        }
-    }
-    
-    # Test with valid dict ref
-    ref = {'Ref': 'MyBucket'}
-    assert resolve_ref('my-stack', ref) == 'my-stack-bucket-u4d24n1mpl0y'
-    
-    # Test invalid inputs
-    with pytest.raises(ValueError, match="stack_name must be a non-empty string"):
-        resolve_ref('', ref)
-    
-    with pytest.raises(TypeError, match="ref must be a dict"):
-        resolve_ref('my-stack', 'MyBucket')
-    
-    with pytest.raises(ValueError, match="ref dict must contain 'Ref' key"):
-        resolve_ref('my-stack', {})
-    
-    with pytest.raises(ValueError, match="ref\\['Ref'\\] must be a non-empty string"):
-        resolve_ref('my-stack', {'Ref': ''})
-    
-    # Verify correct API call
-    mock_cfn.return_value.describe_stack_resource.assert_called_with(
-        StackName='my-stack',
-        LogicalResourceId='MyBucket'
-    )
 
 
 def resolve_ref(stack_name: str, ref: Dict[str, str], region: Optional[str] = None) -> str:

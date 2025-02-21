@@ -80,6 +80,40 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
 
 
+def test_resolve_ref(mocker):
+    """Test resolving CloudFormation refs to physical IDs."""
+    # Mock the CloudFormation client
+    mock_cfn = mocker.patch('boto3.client')
+    mock_cfn.return_value.describe_stack_resource.return_value = {
+        'StackResourceDetail': {
+            'PhysicalResourceId': 'my-stack-bucket-u4d24n1mpl0y'
+        }
+    }
+    
+    # Test with valid dict ref
+    ref = {'Ref': 'MyBucket'}
+    assert resolve_ref('my-stack', ref) == 'my-stack-bucket-u4d24n1mpl0y'
+    
+    # Test invalid inputs
+    with pytest.raises(ValueError, match="stack_name must be a non-empty string"):
+        resolve_ref('', ref)
+    
+    with pytest.raises(TypeError, match="ref must be a dict"):
+        resolve_ref('my-stack', 'MyBucket')
+    
+    with pytest.raises(ValueError, match="ref dict must contain 'Ref' key"):
+        resolve_ref('my-stack', {})
+    
+    with pytest.raises(ValueError, match="ref\\['Ref'\\] must be a non-empty string"):
+        resolve_ref('my-stack', {'Ref': ''})
+    
+    # Verify correct API call
+    mock_cfn.return_value.describe_stack_resource.assert_called_with(
+        StackName='my-stack',
+        LogicalResourceId='MyBucket'
+    )
+
+
 def test_find_resource(cdk_out: Path):
     """Test finding resources by CDK logical ID."""
     assembly = load_assembly(cdk_out)
