@@ -3,6 +3,39 @@ from pathlib import Path
 
 import pytest
 from aws_cdk import cx_api
+
+
+def pytest_addoption(parser):
+    """Add integration test option to pytest."""
+    parser.addoption(
+        "--integration",
+        action="store_true",
+        default=False,
+        help="run integration tests against AWS account"
+    )
+
+
+@pytest.fixture
+def aws_integration(request):
+    """Fixture to determine if integration tests should run."""
+    return request.config.getoption("--integration")
+
+
+@pytest.fixture
+def mock_aws_client(mocker, aws_integration):
+    """Fixture to provide either mocked or real AWS clients."""
+    if aws_integration:
+        # Use real AWS client
+        return None
+    else:
+        # Mock the CloudFormation client
+        mock_cfn = mocker.patch('boto3.client')
+        mock_cfn.return_value.describe_stack_resource.return_value = {
+            'StackResourceDetail': {
+                'PhysicalResourceId': 'my-stack-bucket-u4d24n1mpl0y'
+            }
+        }
+        return mock_cfn
 from aws_sam_cli_refsolver import (
     hello,
     load_assembly,
@@ -80,7 +113,7 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
 
 
-def test_resolve_ref(mocker, cdk_out: Path):
+def test_resolve_ref(mock_aws_client, aws_integration, cdk_out: Path):
     """Test resolving CloudFormation refs to physical IDs."""
     # Load assembly and find a resource
     assembly = load_assembly(cdk_out)
@@ -88,19 +121,24 @@ def test_resolve_ref(mocker, cdk_out: Path):
     assert result is not None
     bucket, stack = result
     
-    # Mock the CloudFormation client
-    mock_cfn = mocker.patch('boto3.client')
-    mock_cfn.return_value.describe_stack_resource.return_value = {
-        'StackResourceDetail': {
-            'PhysicalResourceId': 'my-stack-bucket-u4d24n1mpl0y'
-        }
-    }
-    
     # Test with valid dict ref
     ref = {'Ref': 'ExampleBucket'}
-    assert resolve_ref(stack, ref) == 'my-stack-bucket-u4d24n1mpl0y'
+    physical_id = resolve_ref(stack, ref)
     
-    # Test invalid inputs
+    if aws_integration:
+        # When running integration tests, verify we got a non-empty string
+        assert isinstance(physical_id, str)
+        assert physical_id
+    else:
+        # For unit tests, verify the exact mock value
+        assert physical_id == 'my-stack-bucket-u4d24n1mpl0y'
+        # Verify mock was called correctly
+        mock_aws_client.return_value.describe_stack_resource.assert_called_with(
+            StackName='ExampleStack',
+            LogicalResourceId='ExampleBucket'
+        )
+    
+    # Test invalid inputs (these should work the same in both modes)
     with pytest.raises(TypeError, match="ref must be a dict"):
         resolve_ref(stack, 'ExampleBucket')
     
@@ -109,12 +147,6 @@ def test_resolve_ref(mocker, cdk_out: Path):
     
     with pytest.raises(ValueError, match="ref\\['Ref'\\] must be a non-empty string"):
         resolve_ref(stack, {'Ref': ''})
-    
-    # Verify correct API call
-    mock_cfn.return_value.describe_stack_resource.assert_called_with(
-        StackName='ExampleStack',
-        LogicalResourceId='ExampleBucket'
-    )
 
 
 def test_find_resource(cdk_out: Path):
