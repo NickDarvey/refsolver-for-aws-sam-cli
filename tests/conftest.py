@@ -2,7 +2,7 @@
 import os
 import subprocess
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 import boto3
 import pytest
@@ -50,7 +50,7 @@ def session(request) -> boto3.Session:
     if request.config.getoption("--integration"):
         return boto3.Session()
         
-    mock_session = MagicMock()
+    mock_session = create_autospec(boto3.Session)
     mock_client = MagicMock()
     mock_client.describe_stack_resource.return_value = {
         'StackResourceDetail': {
