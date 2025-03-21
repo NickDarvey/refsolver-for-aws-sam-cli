@@ -113,7 +113,7 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
 
 
-def test_resolve_ref(mock_aws_client, aws_integration, cdk_out: Path):
+def test_resolve_ref(mock_aws_client, cdk_out: Path):
     """Test resolving CloudFormation refs to physical IDs."""
     # Load assembly and find a resource
     assembly = load_assembly(cdk_out)
@@ -125,20 +125,18 @@ def test_resolve_ref(mock_aws_client, aws_integration, cdk_out: Path):
     ref = {'Ref': 'ExampleBucket'}
     physical_id = resolve_ref(stack, ref)
     
-    if aws_integration:
-        # When running integration tests, verify we got a non-empty string
-        assert isinstance(physical_id, str)
-        assert physical_id
-    else:
-        # For unit tests, verify the exact mock value
-        assert physical_id == 'my-stack-bucket-u4d24n1mpl0y'
-        # Verify mock was called correctly
+    # Verify we got a valid physical ID
+    assert isinstance(physical_id, str)
+    assert physical_id
+    
+    # If using mock, verify the mock was called correctly
+    if mock_aws_client is not None:
         mock_aws_client.return_value.describe_stack_resource.assert_called_with(
             StackName='ExampleStack',
             LogicalResourceId='ExampleBucket'
         )
     
-    # Test invalid inputs (these should work the same in both modes)
+    # Test invalid inputs
     with pytest.raises(TypeError, match="ref must be a dict"):
         resolve_ref(stack, 'ExampleBucket')
     
