@@ -8,13 +8,13 @@ import boto3
 import pytest
 from aws_cdk import cx_api
 
-@pytest.fixture(autouse=True)
-def mock_boto3(monkeypatch, request):
-    """Mock boto3 CloudFormation client for offline testing unless --integration is used."""
+@pytest.fixture
+def aws_session(request):
+    """Provide either a mocked or real boto3 session based on --integration flag."""
     if request.config.getoption("--integration"):
-        # Skip mocking if running integration tests
-        return None
+        return boto3.Session()
         
+    mock_session = MagicMock()
     mock_client = MagicMock()
     mock_client.describe_stack_resource.return_value = {
         'StackResourceDetail': {
@@ -22,13 +22,9 @@ def mock_boto3(monkeypatch, request):
         }
     }
     
-    def mock_client_creator(*args, **kwargs):
-        if args and args[0] == 'cloudformation':
-            return mock_client
-        return boto3.client(*args, **kwargs)
-    
-    monkeypatch.setattr(boto3, 'client', mock_client_creator)
-    return mock_client
+    # Configure the mock session to return our mock client
+    mock_session.client.return_value = mock_client
+    return mock_session
 
 def pytest_addoption(parser):
     """Add integration test option to pytest."""

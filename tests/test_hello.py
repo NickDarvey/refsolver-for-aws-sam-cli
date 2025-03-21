@@ -80,7 +80,7 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
 
 
-def test_resolve_ref(cdk_out: Path):
+def test_resolve_ref(cdk_out: Path, aws_session):
     """Test resolving CloudFormation refs to physical IDs."""
     # Load assembly and find a resource
     assembly = load_assembly(cdk_out)
@@ -88,9 +88,9 @@ def test_resolve_ref(cdk_out: Path):
     assert result is not None
     bucket, stack = result
     
-    # Test with valid dict ref and region
+    # Test with valid dict ref, session and region
     ref = {'Ref': 'ExampleBucket'}
-    physical_id = resolve_ref(stack, ref, region='us-east-1')
+    physical_id = resolve_ref(stack, ref, session=aws_session, region='us-east-1')
     
     # Verify we got a valid physical ID
     assert isinstance(physical_id, str)
