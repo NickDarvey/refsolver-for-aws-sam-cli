@@ -91,7 +91,7 @@ def test_resolve_ref(cdk_out: Path, session: boto3.Session):
     
     # Test with valid dict ref and session
     ref = {'Ref': 'ExampleBucket'}
-    physical_id = resolve_ref(session, stack, ref)
+    physical_id = resolve_ref(stack, session, ref)
     
     # Verify we got a valid physical ID
     assert isinstance(physical_id, str)
