@@ -6,9 +6,17 @@ from pathlib import Path
 import pytest
 from aws_cdk import cx_api
 
+def pytest_addoption(parser):
+    """Add integration test option to pytest."""
+    parser.addoption(
+        "--integration",
+        action="store_true",
+        default=False,
+        help="run integration tests against AWS account"
+    )
 
 @pytest.fixture(scope="session")
-def cdk_out(request) -> Path:
+def cdk_out() -> Path:
     """Synthesize the CDK app before running tests."""
     example_dir = Path(__file__).parent / "example"
     out_dir = "cdk.out"

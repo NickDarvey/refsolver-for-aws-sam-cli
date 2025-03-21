@@ -2,40 +2,7 @@
 from pathlib import Path
 
 import pytest
-from aws_cdk import cx_api
 
-
-def pytest_addoption(parser):
-    """Add integration test option to pytest."""
-    parser.addoption(
-        "--integration",
-        action="store_true",
-        default=False,
-        help="run integration tests against AWS account"
-    )
-
-
-@pytest.fixture
-def aws_integration(request):
-    """Fixture to determine if integration tests should run."""
-    return request.config.getoption("--integration")
-
-
-@pytest.fixture
-def mock_aws_client(mocker, aws_integration):
-    """Fixture to provide either mocked or real AWS clients."""
-    if aws_integration:
-        # Use real AWS client
-        return None
-    else:
-        # Mock the CloudFormation client
-        mock_cfn = mocker.patch('boto3.client')
-        mock_cfn.return_value.describe_stack_resource.return_value = {
-            'StackResourceDetail': {
-                'PhysicalResourceId': 'my-stack-bucket-u4d24n1mpl0y'
-            }
-        }
-        return mock_cfn
 from aws_sam_cli_refsolver import (
     hello,
     load_assembly,
@@ -113,7 +80,7 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
 
 
-def test_resolve_ref(mock_aws_client, cdk_out: Path):
+def test_resolve_ref(cdk_out: Path):
     """Test resolving CloudFormation refs to physical IDs."""
     # Load assembly and find a resource
     assembly = load_assembly(cdk_out)
@@ -128,14 +95,7 @@ def test_resolve_ref(mock_aws_client, cdk_out: Path):
     # Verify we got a valid physical ID
     assert isinstance(physical_id, str)
     assert physical_id
-    
-    # If using mock, verify the mock was called correctly
-    if mock_aws_client is not None:
-        mock_aws_client.return_value.describe_stack_resource.assert_called_with(
-            StackName='ExampleStack',
-            LogicalResourceId='ExampleBucket'
-        )
-    
+
     # Test invalid inputs
     with pytest.raises(TypeError, match="ref must be a dict"):
         resolve_ref(stack, 'ExampleBucket')
