@@ -150,23 +150,29 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Sessio
     """Resolve a CloudFormation Ref to its physical resource ID.
     
     Args:
-        session: The boto3 Session to use for AWS API calls
         stack: The CloudFormation stack artifact from CDK
+        session: The boto3 Session to use for AWS API calls
         ref: A dict like {'Ref': 'LogicalId'}
         
     Returns:
         The physical resource ID (e.g. actual bucket name)
         
     Raises:
+        TypeError: If parameters are of wrong type
         ValueError: If ref is invalid
-        TypeError: If ref is not a dict
         
     Example:
         >>> resource, stack = find_resource(assembly, "MyBucket", "AWS::S3::Bucket")
         >>> resolve_ref(stack, {'Ref': 'MyBucket'})
         'my-stack-mybucket-u4d24n1mpl0y'
     """
-    # Validate ref is a dict
+    # Validate parameter types
+    if not isinstance(stack, cx_api.CloudFormationStackArtifact):
+        raise TypeError("stack must be a CloudFormationStackArtifact")
+    
+    if not isinstance(session, boto3.Session):
+        raise TypeError("session must be a boto3.Session")
+    
     if not isinstance(ref, dict):
         raise TypeError("ref must be a dict")
 
