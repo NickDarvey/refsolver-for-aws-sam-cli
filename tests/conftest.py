@@ -9,7 +9,7 @@ import pytest
 from aws_cdk import cx_api
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser):
     """Add integration test option to pytest."""
     parser.addoption(
         "--integration",
@@ -45,7 +45,7 @@ def cdk_out() -> Path:
     return out_path
 
 @pytest.fixture
-def session(request) -> boto3.Session:
+def session(request: pytest.FixtureRequest) -> boto3.Session:
     """Provide either a mocked or real boto3 session based on --integration flag."""
     if request.config.getoption("--integration"):
         return boto3.Session()
