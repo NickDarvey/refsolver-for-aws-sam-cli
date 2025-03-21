@@ -9,8 +9,12 @@ import pytest
 from aws_cdk import cx_api
 
 @pytest.fixture(autouse=True)
-def mock_boto3(monkeypatch):
-    """Mock boto3 CloudFormation client for offline testing."""
+def mock_boto3(monkeypatch, request):
+    """Mock boto3 CloudFormation client for offline testing unless --integration is used."""
+    if request.config.getoption("--integration"):
+        # Skip mocking if running integration tests
+        return None
+        
     mock_client = MagicMock()
     mock_client.describe_stack_resource.return_value = {
         'StackResourceDetail': {
