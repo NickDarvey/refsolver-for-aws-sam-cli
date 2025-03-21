@@ -146,7 +146,7 @@ def find_resource(
 
 
 
-def resolve_ref(session: boto3.Session, stack: cx_api.CloudFormationStackArtifact, ref: Dict[str, str]) -> str:
+def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Session, ref: Dict[str, str]) -> str:
     """Resolve a CloudFormation Ref to its physical resource ID.
     
     Args:

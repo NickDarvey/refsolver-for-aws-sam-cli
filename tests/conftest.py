@@ -8,23 +8,6 @@ import boto3
 import pytest
 from aws_cdk import cx_api
 
-@pytest.fixture
-def aws_session(request):
-    """Provide either a mocked or real boto3 session based on --integration flag."""
-    if request.config.getoption("--integration"):
-        return boto3.Session()
-        
-    mock_session = MagicMock()
-    mock_client = MagicMock()
-    mock_client.describe_stack_resource.return_value = {
-        'StackResourceDetail': {
-            'PhysicalResourceId': 'mock-resource-id'
-        }
-    }
-    
-    # Configure the mock session to return our mock client
-    mock_session.client.return_value = mock_client
-    return mock_session
 
 def pytest_addoption(parser):
     """Add integration test option to pytest."""
@@ -60,3 +43,21 @@ def cdk_out() -> Path:
 
     out_path = example_dir / out_dir
     return out_path
+
+@pytest.fixture
+def session(request) -> boto3.Session:
+    """Provide either a mocked or real boto3 session based on --integration flag."""
+    if request.config.getoption("--integration"):
+        return boto3.Session()
+        
+    mock_session = MagicMock()
+    mock_client = MagicMock()
+    mock_client.describe_stack_resource.return_value = {
+        'StackResourceDetail': {
+            'PhysicalResourceId': 'mock-resource-id'
+        }
+    }
+    
+    # Configure the mock session to return our mock client
+    mock_session.client.return_value = mock_client
+    return mock_session

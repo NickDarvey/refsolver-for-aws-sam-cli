@@ -1,6 +1,7 @@
 """Test cases for hello function."""
 from pathlib import Path
 
+import boto3
 import pytest
 
 from aws_sam_cli_refsolver import (
@@ -80,7 +81,7 @@ def test_extract_ecs_task_definition_environment_vars(cdk_out: Path):
     assert env_vars["TABLE_NAME"] == {"Ref": "ExampleTable114D508F"}
 
 
-def test_resolve_ref(cdk_out: Path, aws_session):
+def test_resolve_ref(cdk_out: Path, session: boto3.Session):
     """Test resolving CloudFormation refs to physical IDs."""
     # Load assembly and find a resource
     assembly = load_assembly(cdk_out)
@@ -90,7 +91,7 @@ def test_resolve_ref(cdk_out: Path, aws_session):
     
     # Test with valid dict ref and session
     ref = {'Ref': 'ExampleBucket'}
-    physical_id = resolve_ref(aws_session, stack, ref)
+    physical_id = resolve_ref(session, stack, ref)
     
     # Verify we got a valid physical ID
     assert isinstance(physical_id, str)
@@ -98,13 +99,13 @@ def test_resolve_ref(cdk_out: Path, aws_session):
 
     # Test invalid inputs
     with pytest.raises(TypeError, match="ref must be a dict"):
-        resolve_ref(stack, 'ExampleBucket')
+        resolve_ref(stack, session, 'ExampleBucket')
     
     with pytest.raises(ValueError, match="ref dict must contain 'Ref' key"):
-        resolve_ref(stack, {})
+        resolve_ref(stack, session, {})
     
     with pytest.raises(ValueError, match="ref\\['Ref'\\] must be a non-empty string"):
-        resolve_ref(stack, {'Ref': ''})
+        resolve_ref(stack, session, {'Ref': ''})
 
 
 def test_find_resource(cdk_out: Path):
