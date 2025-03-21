@@ -2,28 +2,26 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import Sequence
 from unittest.mock import MagicMock, create_autospec
 
 import boto3
 import pytest
-from aws_cdk import cx_api
 
 _EXAMPLE_DIR = Path(__file__).parent / "example"
 _OUT_DIR = "cdk.out"
 
-def _run_cdk(args: Sequence[str]) -> Path:
+def _run_cdk(args: list[str]) -> Path:
 
     old_cwd = os.getcwd()
     os.chdir(_EXAMPLE_DIR)
 
     try:
         return subprocess.run(
-            "cdk" + args,
+            ["cdk"] + args,
             check=True,
             text=True,
         )
-        
+            
     finally:
         os.chdir(old_cwd)
 
