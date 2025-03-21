@@ -88,9 +88,9 @@ def test_resolve_ref(cdk_out: Path, aws_session):
     assert result is not None
     bucket, stack = result
     
-    # Test with valid dict ref, session and region
+    # Test with valid dict ref and session
     ref = {'Ref': 'ExampleBucket'}
-    physical_id = resolve_ref(stack, ref, session=aws_session, region='us-east-1')
+    physical_id = resolve_ref(aws_session, stack, ref)
     
     # Verify we got a valid physical ID
     assert isinstance(physical_id, str)

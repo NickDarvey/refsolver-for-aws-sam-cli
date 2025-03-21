@@ -146,13 +146,13 @@ def find_resource(
 
 
 
-def resolve_ref(stack: cx_api.CloudFormationStackArtifact, ref: Dict[str, str], session: Optional[boto3.Session] = None, region: Optional[str] = None) -> str:
+def resolve_ref(session: boto3.Session, stack: cx_api.CloudFormationStackArtifact, ref: Dict[str, str]) -> str:
     """Resolve a CloudFormation Ref to its physical resource ID.
     
     Args:
+        session: The boto3 Session to use for AWS API calls
         stack: The CloudFormation stack artifact from CDK
         ref: A dict like {'Ref': 'LogicalId'}
-        region: Optional AWS region, defaults to current session region
         
     Returns:
         The physical resource ID (e.g. actual bucket name)
@@ -178,12 +178,8 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, ref: Dict[str, str], 
 
     logical_id = ref['Ref']
     
-    # Use provided session or create default one
-    if session is None:
-        session = boto3.Session()
-    
     # Create CloudFormation client
-    cfn = session.client('cloudformation', region_name=region)
+    cfn = session.client('cloudformation')
     
     # Get physical resource ID
     response = cfn.describe_stack_resource(
