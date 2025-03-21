@@ -2,12 +2,30 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import Sequence
 from unittest.mock import MagicMock, create_autospec
 
 import boto3
 import pytest
 from aws_cdk import cx_api
 
+_EXAMPLE_DIR = Path(__file__).parent / "example"
+_OUT_DIR = "cdk.out"
+
+def _run_cdk(args: Sequence[str]) -> Path:
+
+    old_cwd = os.getcwd()
+    os.chdir(_EXAMPLE_DIR)
+
+    try:
+        return subprocess.run(
+            "cdk" + args,
+            check=True,
+            text=True,
+        )
+        
+    finally:
+        os.chdir(old_cwd)
 
 def pytest_addoption(parser: pytest.Parser):
     """Add integration test option to pytest."""
@@ -21,33 +39,16 @@ def pytest_addoption(parser: pytest.Parser):
 @pytest.fixture(scope="session")
 def cdk_out() -> Path:
     """Synthesize the CDK app before running tests."""
-    example_dir = Path(__file__).parent / "example"
-    out_dir = "cdk.out"
 
-    # Change to example directory since cdk synth expects to run there
-    old_cwd = os.getcwd()
-    os.chdir(example_dir)
+    _run_cdk(["synth", "--output", _OUT_DIR])
+    return _EXAMPLE_DIR / _OUT_DIR
 
-    try:
-        print("\nStarting CDK synthesis...")
-        
-        result = subprocess.run(
-            ["cdk", "synth", "--output", out_dir],
-            check=True,
-            text=True,
-        )
-        
-        print("CDK synthesis completed")
-    finally:
-        os.chdir(old_cwd)
 
-    out_path = example_dir / out_dir
-    return out_path
-
-@pytest.fixture
+@pytest.fixture(scope="session")
 def session(request: pytest.FixtureRequest) -> boto3.Session:
     """Provide either a mocked or real boto3 session based on --integration flag."""
     if request.config.getoption("--integration"):
+        _run_cdk(["deploy", "--app", _OUT_DIR, "--require-approval", "never"])
         return boto3.Session()
         
     mock_session = create_autospec(boto3.Session)
