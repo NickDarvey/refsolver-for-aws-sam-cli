@@ -91,7 +91,7 @@ def find_resource(
     assembly: CDKAssembly, 
     logical_id: str,
     resource_type: str
-) -> Optional[tuple[CFNLogicalId, CFNDefinition, CFNStack]]:
+) -> Optional[tuple[CFNDefinition, CFNStack, CFNLogicalId]]:
     """Find a CloudFormation resource by its CDK logical ID and type.
     
     Args:
@@ -119,7 +119,7 @@ def find_resource(
             # Check metadata for CDK path containing logical ID
             metadata = resource.get("Metadata", {}).get("aws:cdk:path", "")
             if f"/{logical_id}/" in metadata:
-                return CFN_logical_id, resource, current_stack
+                return resource, current_stack, CFN_logical_id
             
             # Check if this is a nested stack
             if resource.get("Type") == "AWS::CloudFormation::Stack":

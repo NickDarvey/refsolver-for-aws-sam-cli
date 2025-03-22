@@ -107,7 +107,7 @@ def test_find_resource(cdk_out: Path):
     # Find the Lambda function
     result = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
     assert result is not None
-    function_id, function_def, stack = result
+    function_def, stack, function_id = result
     assert function_id.startswith("ExampleFunction")
     assert function_def["Type"] == "AWS::Lambda::Function"
     assert stack.stack_name == "ExampleStack"
@@ -115,7 +115,7 @@ def test_find_resource(cdk_out: Path):
     # Find the DynamoDB table
     result = find_resource(assembly, "ExampleTable", "AWS::DynamoDB::Table")
     assert result is not None
-    table_id, table_def, stack = result
+    table_def, stack, table_id = result
     assert table_id.startswith("ExampleTable")
     assert table_def["Type"] == "AWS::DynamoDB::Table"
     assert stack.stack_name == "ExampleStack"
