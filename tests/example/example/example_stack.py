@@ -40,15 +40,28 @@ class ExampleStack(Stack):
         fargate_service = ecs_patterns.ApplicationLoadBalancedFargateService(
             self, "ExampleFargateService",
             cluster=cluster,
-            cpu=256,
-            memory_limit_mib=512,
+            cpu=512,
+            memory_limit_mib=1024,
+            desired_count=1,
             task_image_options=ecs_patterns.ApplicationLoadBalancedTaskImageOptions(
                 image=ecs.ContainerImage.from_registry("public.ecr.aws/docker/library/busybox:latest"),
                 command=["sh", "-c", "while true; do echo 'Example Container Service'; sleep 60; done"],
                 environment={
                     "BUCKET_NAME": example_bucket.bucket_name,
                     "TABLE_NAME": example_table.table_name
-                }
+                },
+                health_check=ecs.HealthCheck(
+                    command=["CMD-SHELL", "exit 0"],
+                    interval=Duration.seconds(30),
+                    timeout=Duration.seconds(5),
+                    retries=3
+                )
+            ),
+            deployment_controller=ecs.DeploymentController(
+                type=ecs.DeploymentControllerType.ECS
+            ),
+            circuit_breaker=ecs.DeploymentCircuitBreaker(
+                rollback=True
             )
         )
 
