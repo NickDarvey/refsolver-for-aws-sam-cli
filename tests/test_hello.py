@@ -5,18 +5,12 @@ import boto3
 import pytest
 
 from aws_sam_cli_refsolver import (
-    hello,
     load_assembly,
     find_resource,
     resolve_ref,
     extract_lambda_function_environment_vars,
     extract_ecs_task_definition_environment_vars,
 )
-
-
-def test_hello():
-    """Test hello function returns expected greeting."""
-    assert hello() == "Hello from AWS SAM CLI RefSolver!"
 
 
 def test_cdk_synth(cdk_out: Path):
@@ -87,11 +81,9 @@ def test_resolve_ref(cdk_out: Path, session: boto3.Session):
     assembly = load_assembly(cdk_out)
     result = find_resource(assembly, "ExampleBucket", "AWS::S3::Bucket")
     assert result is not None
-    bucket, stack = result
+    bucket_id, bucket_def, stack = result
     
-    # Test with valid dict ref and session
-    ref = {'Ref': 'ExampleBucket'}
-    physical_id = resolve_ref(stack, session, ref)
+    physical_id = resolve_ref(stack, session, {'Ref': bucket_id})
     
     # Verify we got a valid physical ID
     assert isinstance(physical_id, str)

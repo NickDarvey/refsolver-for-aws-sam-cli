@@ -8,12 +8,13 @@ from aws_cdk import cx_api
 __version__ = "0.1.0"
 
 
-def hello() -> str:
-    """Return a friendly greeting."""
-    return "Hello from AWS SAM CLI RefSolver!"
+CFNLogicalId = str
+CFNDefinition = Dict[str, Any]
+CFNStack = cx_api.CloudFormationStackArtifact
+CDKAssembly = cx_api.CloudAssembly
 
 
-def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
+def load_assembly(cdk_out_dir: Path) -> CDKAssembly:
     """Load CDK cloud assembly from the given output directory.
     
     Args:
@@ -22,10 +23,10 @@ def load_assembly(cdk_out_dir: Path) -> cx_api.CloudAssembly:
     Returns:
         The loaded CloudAssembly object
     """
-    return cx_api.CloudAssembly(str(cdk_out_dir))
+    return CDKAssembly(str(cdk_out_dir))
 
 
-def extract_lambda_function_environment_vars(function_tuple: tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]) -> Dict[str, Any]:
+def extract_lambda_function_environment_vars(function_tuple: tuple[CFNDefinition, CFNStack]) -> Dict[str, Any]:
     """Extract environment variables from a Lambda function definition.
     
     Args:
@@ -49,7 +50,7 @@ def extract_lambda_function_environment_vars(function_tuple: tuple[Dict[str, Any
     return function.get("Properties", {}).get("Environment", {}).get("Variables", {})
 
 
-def extract_ecs_task_definition_environment_vars(task_definition_tuple: tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]) -> Dict[str, Any]:
+def extract_ecs_task_definition_environment_vars(task_definition_tuple: tuple[CFNDefinition, CFNStack]) -> Dict[str, Any]:
     """Extract environment variables from an ECS task definition.
     
     Args:
@@ -87,10 +88,10 @@ def extract_ecs_task_definition_environment_vars(task_definition_tuple: tuple[Di
 
 
 def find_resource(
-    assembly: cx_api.CloudAssembly, 
+    assembly: CDKAssembly, 
     logical_id: str,
     resource_type: str
-) -> Optional[tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]]:
+) -> Optional[tuple[CFNLogicalId, CFNDefinition, CFNStack]]:
     """Find a CloudFormation resource by its CDK logical ID and type.
     
     Args:
@@ -107,10 +108,10 @@ def find_resource(
         >>> print(function["Type"])
         'AWS::Lambda::Function'
     """
-    def search_stack(template: Dict[str, Any], current_stack: cx_api.CloudFormationStackArtifact) -> Optional[tuple[Dict[str, Any], cx_api.CloudFormationStackArtifact]]:
+    def search_stack(template: Dict[str, Any], current_stack: CFNStack) -> Optional[tuple[CFNLogicalId, CFNDefinition, CFNStack]]:
         """Search a stack template for the resource."""
         # Look through all resources
-        for resource in template.get("Resources", {}).values():
+        for CFN_logical_id, resource in template.get("Resources", {}).items():
             # Check resource type matches
             if resource.get("Type") != resource_type:
                 continue
@@ -118,7 +119,7 @@ def find_resource(
             # Check metadata for CDK path containing logical ID
             metadata = resource.get("Metadata", {}).get("aws:cdk:path", "")
             if f"/{logical_id}/" in metadata:
-                return resource, current_stack
+                return CFN_logical_id, resource, current_stack
             
             # Check if this is a nested stack
             if resource.get("Type") == "AWS::CloudFormation::Stack":
@@ -185,10 +186,10 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Sessio
     logical_id = ref['Ref']
     
     # Create CloudFormation client
-    cfn = session.client('cloudformation')
+    CFN = session.client('cloudformation')
     
     # Get physical resource ID
-    response = cfn.describe_stack_resource(
+    response = CFN.describe_stack_resource(
         StackName=stack.stack_name,
         LogicalResourceId=logical_id
     )
