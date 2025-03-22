@@ -81,9 +81,9 @@ def test_resolve_ref(cdk_out: Path, session: boto3.Session):
     assembly = load_assembly(cdk_out)
     result = find_resource(assembly, "ExampleBucket", "AWS::S3::Bucket")
     assert result is not None
-    bucket_id, _, stack = result
+    _, stack, logical_id = result
     
-    physical_id = resolve_ref(stack, session, {'Ref': bucket_id})
+    physical_id = resolve_ref(stack, session, {'Ref': logical_id})
     
     # Verify we got a valid physical ID
     assert isinstance(physical_id, str)

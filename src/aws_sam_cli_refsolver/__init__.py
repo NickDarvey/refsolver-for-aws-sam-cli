@@ -26,23 +26,23 @@ def load_assembly(cdk_out_dir: Path) -> CDKAssembly:
     return CDKAssembly(str(cdk_out_dir))
 
 
-def extract_lambda_function_environment_vars(function_tuple: tuple[CFNDefinition, CFNStack]) -> Dict[str, Any]:
+def extract_lambda_function_environment_vars(resource_tuple: tuple[CFNDefinition, CFNStack, CFNLogicalId]) -> Dict[str, Any]:
     """Extract environment variables from a Lambda function definition.
     
     Args:
-        function: The CloudFormation resource definition for a Lambda function
+        resource_tuple: Tuple of (resource_def, stack, logical_id) from find_resource()
         
     Returns:
         Dictionary mapping environment variable names to their values
         
     Example:
-        >>> func = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
-        >>> env_vars = extract_lambda_environment_vars(func)
+        >>> resource = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
+        >>> env_vars = extract_lambda_environment_vars(resource)
         >>> print(env_vars["BUCKET_NAME"])
         {'Ref': 'ExampleBucketDC717CF4'}
     """
     # Unpack the tuple
-    function, _ = function_tuple
+    function, _, _ = resource_tuple
     
     # Verify resource type
     if function.get("Type") != "AWS::Lambda::Function":
@@ -50,23 +50,23 @@ def extract_lambda_function_environment_vars(function_tuple: tuple[CFNDefinition
     return function.get("Properties", {}).get("Environment", {}).get("Variables", {})
 
 
-def extract_ecs_task_definition_environment_vars(task_definition_tuple: tuple[CFNDefinition, CFNStack]) -> Dict[str, Any]:
+def extract_ecs_task_definition_environment_vars(resource_tuple: tuple[CFNDefinition, CFNStack, CFNLogicalId]) -> Dict[str, Any]:
     """Extract environment variables from an ECS task definition.
     
     Args:
-        task_definition: The CloudFormation resource definition for an ECS task
+        resource_tuple: Tuple of (resource_def, stack, logical_id) from find_resource()
         
     Returns:
         Dictionary mapping environment variable names to their values
         
     Example:
-        >>> task_def = find_resource(assembly, "ExampleTaskDef", "AWS::ECS::TaskDefinition")
-        >>> env_vars = extract_environment_vars(task_def)
+        >>> resource = find_resource(assembly, "ExampleTaskDef", "AWS::ECS::TaskDefinition")
+        >>> env_vars = extract_environment_vars(resource)
         >>> print(env_vars["BUCKET_NAME"])
         {'Ref': 'ExampleBucketDC717CF4'}
     """
     # Unpack the tuple
-    task_definition, _ = task_definition_tuple
+    task_definition, _, _ = resource_tuple
     
     # Verify resource type
     if task_definition.get("Type") != "AWS::ECS::TaskDefinition":
