@@ -81,7 +81,7 @@ def test_resolve_ref(cdk_out: Path, session: boto3.Session):
     assembly = load_assembly(cdk_out)
     result = find_resource(assembly, "ExampleBucket", "AWS::S3::Bucket")
     assert result is not None
-    bucket_id, bucket_def, stack = result
+    bucket_id, _, stack = result
     
     physical_id = resolve_ref(stack, session, {'Ref': bucket_id})
     
@@ -107,15 +107,17 @@ def test_find_resource(cdk_out: Path):
     # Find the Lambda function
     result = find_resource(assembly, "ExampleFunction", "AWS::Lambda::Function")
     assert result is not None
-    function, stack = result
-    assert function["Type"] == "AWS::Lambda::Function"
+    function_id, function_def, stack = result
+    assert function_id.startswith("ExampleFunction")
+    assert function_def["Type"] == "AWS::Lambda::Function"
     assert stack.stack_name == "ExampleStack"
     
     # Find the DynamoDB table
     result = find_resource(assembly, "ExampleTable", "AWS::DynamoDB::Table")
     assert result is not None
-    table, stack = result
-    assert table["Type"] == "AWS::DynamoDB::Table"
+    table_id, table_def, stack = result
+    assert table_id.startswith("ExampleTable")
+    assert table_def["Type"] == "AWS::DynamoDB::Table"
     assert stack.stack_name == "ExampleStack"
     
     # Test non-existent resource
