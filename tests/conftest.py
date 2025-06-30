@@ -51,7 +51,7 @@ def session(request: pytest.FixtureRequest) -> boto3.Session:
         # Register cleanup to destroy stack after tests
         def cleanup():
             try:
-                _run_cdk(["destroy", "--app", _OUT_DIR, "--require-approval", "never"])
+                _run_cdk(["destroy", "--app", _OUT_DIR, "--require-approval", "never", "--force"])
             except subprocess.CalledProcessError as e:
                 print(f"Warning: Failed to destroy CDK stack: {e}")
         
