@@ -160,14 +160,13 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Sessio
         
     Raises:
         TypeError: If parameters are of wrong type
-        ValueError: If ref is invalid
+        ValueError: If ref is invalid or no region is available from session or stack
         
     Example:
         >>> resource, stack = find_resource(assembly, "MyBucket", "AWS::S3::Bucket")
-        >>> resolve_ref(stack, {'Ref': 'MyBucket'})
+        >>> resolve_ref(stack, session, {'Ref': 'MyBucket'})
         'my-stack-mybucket-u4d24n1mpl0y'
     """
-    # Validate parameter types
     if not isinstance(stack, cx_api.CloudFormationStackArtifact):
         raise TypeError("stack must be a CloudFormationStackArtifact")
     
@@ -177,7 +176,6 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Sessio
     if not isinstance(ref, dict):
         raise TypeError("ref must be a dict")
 
-    # Validate ref has 'Ref' key with non-empty string value
     if 'Ref' not in ref:
         raise ValueError("ref dict must contain 'Ref' key")
     if not isinstance(ref['Ref'], str) or not ref['Ref']:
@@ -185,25 +183,16 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Sessio
 
     logical_id = ref['Ref']
     
-    # Determine region for CloudFormation client
     region = None
-    
-    # 1. Use session region if set
     if hasattr(session, 'region_name') and session.region_name:
         region = session.region_name
-    
-    # 2. Use stack region if available and not 'unknown'
     elif hasattr(stack, 'environment') and stack.environment.region != 'unknown-region':
         region = stack.environment.region
-    
-    # 3. Throw error if no valid region found
     else:
         raise ValueError("No region specified. Either configure your boto3 session with a region or deploy the CDK stack with a specific region.")
     
-    # Create CloudFormation client with determined region
     CFN = session.client('cloudformation', region_name=region)
     
-    # Get physical resource ID
     response = CFN.describe_stack_resource(
         StackName=stack.stack_name,
         LogicalResourceId=logical_id
