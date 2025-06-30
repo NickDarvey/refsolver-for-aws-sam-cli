@@ -50,19 +50,7 @@ class ExampleStack(Stack):
                 environment={
                     "BUCKET_NAME": example_bucket.bucket_name,
                     "TABLE_NAME": example_table.table_name
-                },
-                health_check=ecs.HealthCheck(
-                    command=["CMD-SHELL", "exit 0"],
-                    interval=Duration.seconds(30),
-                    timeout=Duration.seconds(5),
-                    retries=3
-                )
-            ),
-            deployment_controller=ecs.DeploymentController(
-                type=ecs.DeploymentControllerType.ECS
-            ),
-            circuit_breaker=ecs.DeploymentCircuitBreaker(
-                rollback=True
+                }
             )
         )
 
