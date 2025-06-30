@@ -185,8 +185,23 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Sessio
 
     logical_id = ref['Ref']
     
-    # Create CloudFormation client
-    CFN = session.client('cloudformation')
+    # Determine region for CloudFormation client
+    region = None
+    
+    # 1. Use session region if set
+    if hasattr(session, 'region_name') and session.region_name:
+        region = session.region_name
+    
+    # 2. Use stack region if available and not 'unknown'
+    elif hasattr(stack, 'environment') and stack.environment.region != 'unknown-region':
+        region = stack.environment.region
+    
+    # 3. Throw error if no valid region found
+    else:
+        raise ValueError("No region specified. Either configure your boto3 session with a region or deploy the CDK stack with a specific region.")
+    
+    # Create CloudFormation client with determined region
+    CFN = session.client('cloudformation', region_name=region)
     
     # Get physical resource ID
     response = CFN.describe_stack_resource(
