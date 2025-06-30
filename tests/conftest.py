@@ -47,6 +47,15 @@ def session(request: pytest.FixtureRequest) -> boto3.Session:
     """Provide either a mocked or real boto3 session based on --integration flag."""
     if request.config.getoption("--integration"):
         _run_cdk(["deploy", "--app", _OUT_DIR, "--require-approval", "never"])
+        
+        # Register cleanup to destroy stack after tests
+        def cleanup():
+            try:
+                _run_cdk(["destroy", "--app", _OUT_DIR, "--require-approval", "never"])
+            except subprocess.CalledProcessError as e:
+                print(f"Warning: Failed to destroy CDK stack: {e}")
+        
+        request.addfinalizer(cleanup)
         return boto3.Session()
         
     mock_session = create_autospec(boto3.Session)
