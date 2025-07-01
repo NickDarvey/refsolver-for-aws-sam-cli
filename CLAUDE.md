@@ -1,6 +1,6 @@
 # Claude
 
-Instructions for Claude.
+Instructions for Claude. My name is Captain.
 
 ## Tracking work
 
@@ -22,3 +22,8 @@ Instructions for Claude.
 
 1. Do not add code comments explaining what code is doing unless it is obtuse.
 2. Do add comments that explain why we've decided to write code when it will be non-obvious to the next developer.
+
+## Writing tests
+
+1. Make your tests focus on specific cases.
+2. Use AAA-style.

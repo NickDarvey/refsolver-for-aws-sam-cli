@@ -1,4 +1,4 @@
-# TODO
+# Work
 
 ## 1. [ ] Make AWS SAM CLI-friendly
 

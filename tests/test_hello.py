@@ -10,6 +10,7 @@ from aws_sam_cli_refsolver import (
     resolve_ref,
     extract_lambda_function_environment_vars,
     extract_ecs_task_definition_environment_vars,
+    generate_sam_env_vars,
 )
 
 
@@ -123,3 +124,33 @@ def test_find_resource(cdk_out: Path):
     # Test non-existent resource
     missing = find_resource(assembly, "NonExistentResource", "AWS::Lambda::Function")
     assert missing is None
+
+
+def test_generate_sam_env_vars_success(cdk_out: Path, session: boto3.Session):
+    """Test generating SAM CLI environment variables for valid function."""
+    # Arrange
+    assembly = load_assembly(cdk_out)
+    
+    # Act
+    env_vars = generate_sam_env_vars(assembly, session, "ExampleFunction")
+    
+    # Assert
+    assert isinstance(env_vars, dict)
+    assert "ExampleFunction" in env_vars
+    function_env = env_vars["ExampleFunction"]
+    assert "BUCKET_NAME" in function_env
+    assert "TABLE_NAME" in function_env
+    assert isinstance(function_env["BUCKET_NAME"], str)
+    assert isinstance(function_env["TABLE_NAME"], str)
+    assert function_env["BUCKET_NAME"]
+    assert function_env["TABLE_NAME"]
+
+
+def test_generate_sam_env_vars_function_not_found(cdk_out: Path, session: boto3.Session):
+    """Test error when Lambda function does not exist."""
+    # Arrange
+    assembly = load_assembly(cdk_out)
+    
+    # Act & Assert
+    with pytest.raises(ValueError, match="Lambda function 'NonExistentFunction' not found"):
+        generate_sam_env_vars(assembly, session, "NonExistentFunction")

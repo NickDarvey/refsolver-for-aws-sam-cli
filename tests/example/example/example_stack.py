@@ -1,7 +1,6 @@
 from aws_cdk import (
     Stack,
     RemovalPolicy,
-    Duration,
     aws_dynamodb as dynamodb,
     aws_s3 as s3,
     aws_ec2 as ec2,

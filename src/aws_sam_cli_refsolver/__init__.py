@@ -1,6 +1,6 @@
 """AWS SAM CLI Reference Resolver package."""
 from pathlib import Path
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any
 
 import boto3
 from aws_cdk import cx_api
@@ -199,3 +199,48 @@ def resolve_ref(stack: cx_api.CloudFormationStackArtifact, session: boto3.Sessio
     )
     
     return response['StackResourceDetail']['PhysicalResourceId']
+
+
+def generate_sam_env_vars(
+    assembly: CDKAssembly,
+    session: boto3.Session,
+    function_logical_id: str
+) -> Dict[str, Dict[str, str]]:
+    """Generate SAM CLI environment variables with resolved CloudFormation references.
+    
+    This function creates the env.json format expected by `sam local invoke --env-vars`,
+    with all CloudFormation references resolved to actual AWS resource names.
+    
+    Args:
+        assembly: The CDK cloud assembly to search
+        session: The boto3 Session to use for AWS API calls  
+        function_logical_id: The CDK logical ID of the Lambda function
+        
+    Returns:
+        Dictionary in SAM CLI env.json format: {function_name: {env_var: value}}
+        
+    Raises:
+        ValueError: If the Lambda function is not found
+        
+    Example:
+        >>> assembly = load_assembly(Path("cdk.out"))
+        >>> session = boto3.Session(profile_name='sandbox')
+        >>> env_vars = generate_sam_env_vars(assembly, session, "ExampleFunction")
+        >>> print(env_vars)
+        {'ExampleFunction': {'BUCKET_NAME': 'mystack-bucket-abc123', 'TABLE_NAME': 'MyTable-XYZ789'}}
+    """
+    function_resource = find_resource(assembly, function_logical_id, "AWS::Lambda::Function")
+    if not function_resource:
+        raise ValueError(f"Lambda function '{function_logical_id}' not found in assembly")
+    
+    resource_def, stack, cfn_logical_id = function_resource
+    env_vars = extract_lambda_function_environment_vars(function_resource)
+    
+    resolved_env = {}
+    for key, value in env_vars.items():
+        if isinstance(value, dict) and 'Ref' in value:
+            resolved_env[key] = resolve_ref(stack, session, value)
+        else:
+            resolved_env[key] = str(value)
+    
+    return {function_logical_id: resolved_env}
