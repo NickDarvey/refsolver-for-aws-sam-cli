@@ -47,8 +47,8 @@ poetry run pytest
 # Run tests with verbose output
 poetry run pytest -v
 
-# Run integration tests (requires AWS credentials and CDK)
-poetry run pytest --integration
+# Run integration tests (requires AWS credentials configured, such as SSO)
+AWS_PROFILE=sandbox poetry run pytest --integration
 
 # Run specific test file
 poetry run pytest tests/test_hello.py
