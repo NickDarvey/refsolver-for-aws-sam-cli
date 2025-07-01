@@ -5,3 +5,4 @@
 set HOME=
 
 if not exist "%USERPROFILE%\.aws" mkdir "%USERPROFILE%\.aws"
+if not exist "%USERPROFILE%\.claude" mkdir "%USERPROFILE%\.claude"

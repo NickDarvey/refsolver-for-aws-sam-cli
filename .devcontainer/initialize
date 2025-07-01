@@ -1,3 +1,4 @@
 #!/bin/sh
 
 mkdir -p ~/.aws
+mkdir -p ~/.claude
