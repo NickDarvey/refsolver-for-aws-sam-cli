@@ -16,7 +16,8 @@ Instructions for Claude. My name is Captain.
 ## Completing work
 
 1. Before considering work done, validate it with tests or another means.
-2. Open a PR to contribute the work back to the default branch.
+2. Open a PR to contribute the work back to the master branch.
+3. Update WORK.md to mark the item as completed.
 
 ## Writing code
 
