@@ -1,20 +1,13 @@
-# AWS SAM CLI RefSolver
+# Refsolver for AWS SAM CLI
 
-A Python library that enables **hybrid development** with AWS CDK and SAM CLI - run your Lambda functions locally while they interact with real AWS resources in your sandbox account.
+A Python library that enables **hybrid development** with AWS SAM CLI. Run your Lambda functions locally with (full breakpoint debugging) while they interact with real AWS resources in your sandbox account.
 
-When developing with CDK, your Lambda functions often reference other AWS resources (S3 buckets, DynamoDB tables, etc.) through CloudFormation references like `{"Ref": "MyBucket"}`. This library resolves those references to actual AWS resource names, allowing you to:
+This library resolves CloudFormation references like `{"Ref": "MyBucket"}` to actual AWS resource names, allowing you to:
 
-- Run Lambda functions locally using `sam local invoke`
-- Have them connect to real S3 buckets, DynamoDB tables, etc. in your AWS sandbox
-- Skip the complexity of mocking AWS services during development
-- Test against real AWS resources without full deployment
-
-## Key Use Cases
-
-- **Local Lambda + Real S3**: Run a Lambda locally that reads/writes to an S3 bucket in AWS
-- **Local Lambda + Real DynamoDB**: Test Lambda functions against real DynamoDB tables
-- **Hybrid Development**: Develop locally while using real AWS infrastructure
-- **Sandbox Testing**: Connect local code to sandbox AWS resources safely
+- **Test against real AWS behavior**: no emulation, no approximation, just real AWS services
+- **Skip manual resource naming**: no need to hardcode physical resource names or manage environment configs
+- **Preserve CDK abstractions**: keep using logical IDs while connecting to actual deployed infrastructure
+- **Enable true hybrid development**: local code execution with cloud resource interactions
 
 ## Installation
 
