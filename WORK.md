@@ -1,6 +1,6 @@
 # Work
 
-## 1. [ ] Make AWS SAM CLI-friendly
+## 1. [x] Make AWS SAM CLI-friendly
 
 So far we've got neat library functions which can be composed together. However, our users just want to use SAM CLI.
 
