@@ -1,17 +1,28 @@
 # Work
 
-## 1. [x] Make AWS SAM CLI-friendly
+## 1. [ ] Make AWS SAM user-friendly
 
 So far we've got neat library functions which can be composed together. However, our users just want to use SAM CLI.
-
 That is, we want them to be able to call `sam local invoke MyFunction --env-vars MyFunction.env.json --profile sandbox` using an `.env.json` we have generated for them where we've resolved any refs.
-
 Note:
 
 1. We should not wrap calls (to SAM CLI or CDK CLI) but keep writing things in a composable manner.
-2. Users will probably include this function call in a pyinvoke task but they might invoke it from terminal so we should make it ergonomic both ways. That might mean exposing a dedicated terminal interface if we can't express it in one function.
+2. Users will probably include this function call in a pyinvoke task, so make it neat to use from Python.
 
-## 2. [ ] Implement a build pipeline
+## 2. [ ] Turn this into a nice tool to call from terminal
+
+Some users might want to use it from the terminal, so we should make a function which is ergonomic to use there.
+Note:
+
+1. It should the assembly dir and function name from args, create a default session, and write the output env var JSON (defaulting to use the function name).
+2. Update the Python project so it will make something executable available when installed, ideally like `refsolver ...`.
+3. Prefer explicitly named args over positional.
+
+## 3. [ ] Rewrite the usage section of the README
+
+1. Update the README usage section to focus on the CLI usage and two high-level function usage.
+
+## 4. [ ] Implement a build pipeline
 
 1. We are using GitHub so use GitHub actions.
 2. Every commit to main or every commit on an open PR should run the pipeline.
@@ -24,7 +35,7 @@ Note:
    - No one should be allowed to commit to main except via PR.
    - Merges to main should be squashed.
 
-## 3. [ ] Implement a release pipeline
+## 5. [ ] Implement a release pipeline
 
 1. We want to use trunk-based development where every commit on main produces a new version of the package.
 2. We'll eventually publish this to PyPI, but for starters, let's just publish it as a release in GitHub.
