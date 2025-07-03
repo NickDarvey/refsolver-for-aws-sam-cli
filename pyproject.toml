@@ -15,6 +15,9 @@ dependencies = [
     "aws-cdk-lib (>=2.178.2,<3.0.0)",
 ]
 
+[project.scripts]
+refsolver = "aws_sam_cli_refsolver.cli:main"
+
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.2.1"
 pytest = ">=8.0.0"

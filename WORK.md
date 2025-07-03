@@ -1,6 +1,6 @@
 # Work
 
-## 1. [ ] Make AWS SAM user-friendly
+## 1. [x] Make AWS SAM user-friendly
 
 So far we've got neat library functions which can be composed together. However, our users just want to use SAM CLI.
 That is, we want them to be able to call `sam local invoke MyFunction --env-vars MyFunction.env.json --profile sandbox` using an `.env.json` we have generated for them where we've resolved any refs.
@@ -9,7 +9,7 @@ Note:
 1. We should not wrap calls (to SAM CLI or CDK CLI) but keep writing things in a composable manner.
 2. Users will probably include this function call in a pyinvoke task, so make it neat to use from Python.
 
-## 2. [ ] Turn this into a nice tool to call from terminal
+## 2. [x] Turn this into a nice tool to call from terminal
 
 Some users might want to use it from the terminal, so we should make a function which is ergonomic to use there.
 Note:
